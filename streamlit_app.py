@@ -145,7 +145,7 @@ def analyze(img, use_clahe):
     seen = cv_pipeline.enhance(img) if use_clahe else None
     ann, msg, scores, zw = inference.predict_gfe(img, use_clahe=bool(use_clahe))
     if not scores:
-        return {"ok": False, "ann": ann, "seen": seen, "main": main_html([html.escape(msg)])}
+        return {"ok": False, "ann": ann, "seen": seen, "orig": img, "main": main_html([html.escape(msg)])}
     ranked, margin, raw = show_scores(img, use_clahe=bool(use_clahe))
     rawd = {n: float(r) for n, r in zip(inference._names, raw)}
     top_name = ranked[0][0]
@@ -172,7 +172,7 @@ def analyze(img, use_clahe):
     if desc:
         what = h(f'<div class="card"><div class="ttl">What is "{html.escape(desc[0])}"?</div>'
                  f'<div>{html.escape(desc[1])}</div></div>')
-    return {"ok": True, "ann": ann, "seen": seen, "main": main_html(lines),
+    return {"ok": True, "ann": ann, "seen": seen, "orig": img, "main": main_html(lines),
             "rank": rank_html(ranked, rawd), "zones": zcards, "what": what}
 
 
@@ -277,13 +277,15 @@ else:
                           '<span><i style="background:rgb(60,180,90)"></i>bottom third</span></div>'),
                         unsafe_allow_html=True)
             st.markdown(r["main"], unsafe_allow_html=True)
+            if r.get("seen") is not None:
+                st.markdown('<div class="sh" style="margin-top:14px">Contrast fix: what the detector saw</div>', unsafe_allow_html=True)
+                c1, c2 = st.columns(2)
+                c1.image(r["orig"], caption="Original", width="stretch")
+                c2.image(r["seen"], caption="After CLAHE", width="stretch")
             if r["ok"]:
                 st.markdown(r["what"], unsafe_allow_html=True)
                 st.markdown(r["rank"], unsafe_allow_html=True)
                 st.markdown(r["zones"], unsafe_allow_html=True)
-            if r.get("seen") is not None:
-                with st.expander("What the detector saw (contrast fix on)"):
-                    st.image(r["seen"], width="stretch")
 
     with st.expander("What do the nine expressions mean?"):
         for key, (name, text) in EXPRESSIONS.items():
