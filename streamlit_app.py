@@ -232,6 +232,8 @@ else:
     with left:
         st.markdown('<div class="sh"><i>1</i> Choose a photo</div>', unsafe_allow_html=True)
         up = st.file_uploader("Upload a face photo", type=["jpg", "jpeg", "png", "webp"], label_visibility="collapsed")
+        with st.expander("Or take a photo with your camera"):
+            cam = st.camera_input("Camera", label_visibility="collapsed")
         if EXAMPLES:
             st.caption("Or try an example (frames from the public dataset)")
             cols = st.columns(len(EXAMPLES))
@@ -241,7 +243,9 @@ else:
                     if st.button("Use this", key="ex_" + os.path.basename(p), width="stretch"):
                         st.session_state.example = p
         source, label = None, None
-        if up is not None:
+        if cam is not None:
+            source, label = ("upload", cam), "your camera photo"
+        elif up is not None:
             source, label = ("upload", up), "your uploaded photo"
         elif st.session_state.example:
             source, label = ("example", st.session_state.example), "an example photo"
